@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Signature Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 10px;
+        }
+        #container {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border: 2px solid #000;
+            border-radius: 10px;
+            text-align: center;
+        }
+        #canvas {
+            width: 100%;
+            height: auto;
+            border: 2px solid #000;
+            margin: 20px 0;
+        }
+        #controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+        #clear-btn, #download-btn, #undo-btn {
+            margin: 5px;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        #color-picker, #line-width {
+            margin: 5px;
+            width: 100px;
+            padding: 3px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>E-Signature Website</h1>
+        <div id="controls">
+            <button id="clear-btn">Clear</button>
+            <input type="color" id="color-picker" value="#000000">
+            <input type="number" id="line-width" value="2" min="1" max="10" step="1"> Line Width
+            <button id="undo-btn">Undo</button>
+            <button id="download-btn">Download</button>
+        </div>
+        <canvas id="canvas" width="600" height="300"></canvas>
+        <div class="footer">Design by Sachin!</div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            var canvas = document.getElementById('canvas');
+            var context = canvas.getContext('2d');
+
+            var isDrawing = false;
+            var lastX = 0;
+            var lastY = 0;
+            var lineColor = '#000000';
+            var lineWidth = 2;
+            var drawingHistory = [];
+
+            canvas.addEventListener('mousedown', function(e) {
+                isDrawing = true;
+                [lastX, lastY] = [e.offsetX, e.offsetY];
+            });
+
+            canvas.addEventListener('mousemove', function(e) {
+                if (!isDrawing) return;
+                context.beginPath();
+                context.moveTo(lastX, lastY);
+                context.lineTo(e.offsetX, e.offsetY);
+                context.strokeStyle = lineColor;
+                context.lineWidth = lineWidth;
+                context.lineCap = 'round';
+                context.lineJoin = 'round';
+                context.stroke();
+                [lastX, lastY] = [e.offsetX, e.offsetY];
+            });
+
+            canvas.addEventListener('mouseup', function() {
+                isDrawing = false;
+                drawingHistory.push(context.getImageData(0, 0, canvas.width, canvas.height));
+            });
+
+            canvas.addEventListener('mouseout', function() {
+                isDrawing = false;
+            });
+
+            var clearBtn = document.getElementById('clear-btn');
+            clearBtn.addEventListener('click', function() {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                drawingHistory = [];
+            });
+
+            var colorPicker = document.getElementById('color-picker');
+            colorPicker.addEventListener('input', function() {
+                lineColor = colorPicker.value;
+            });
+
+            var lineWidthInput = document.getElementById('line-width');
+            lineWidthInput.addEventListener('input', function() {
+                lineWidth = lineWidthInput.value;
+            });
+
+            var undoBtn = document.getElementById('undo-btn');
+            undoBtn.addEventListener('click', function() {
+                if (drawingHistory.length > 0) {
+                    context.putImageData(drawingHistory.pop(), 0, 0);
+                }
+            });
+
+            var downloadBtn = document.getElementById('download-btn');
+            downloadBtn.addEventListener('click', function() {
+                var dataURL = canvas.toDataURL('image/png');
+                var link = document.createElement('a');
+                link.href = dataURL;
+                link.download = 'signature.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+        };
+    </script>
+</body>
+</html>
